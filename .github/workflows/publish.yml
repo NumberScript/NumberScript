@@ -1,25 +1,32 @@
-name: Publish VS Code Extension
+name: Publish NumberScript Extension
 
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*.*.*'   # Triggers workflow on version tags like v1.0.0, v1.1.0, etc.
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
 
-      - name: Setup Node
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - run: npm install -g vsce
+      - name: Install dependencies
+        run: npm install
 
-      - run: npm install
-      - run: npm run build
+      - name: Build extension
+        run: npm run build
 
-      - name: Publish to Marketplace
+      - name: Install vsce
+        run: npm install -g vsce
+
+      - name: Publish to VS Code Marketplace
         run: vsce publish -p ${{ secrets.VSCE_PAT }}
+
