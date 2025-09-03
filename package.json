@@ -2,7 +2,7 @@
   "name": "numberscript",
   "displayName": "NumberScript",
   "description": "A symbolic math language for VS Code Web with simplify, expand, solve, and graph support.",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "publisher": "NumberScript",
   "engines": {
     "vscode": "^1.87.0"
@@ -38,8 +38,13 @@
     "languages": [
       {
         "id": "numberscript",
-        "aliases": ["NumberScript", "numberscript"],
-        "extensions": [".ns"],
+        "aliases": [
+          "NumberScript",
+          "numberscript"
+        ],
+        "extensions": [
+          ".ns"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -97,4 +102,3 @@
     "nearley": "^2.20.1"
   }
 }
-
