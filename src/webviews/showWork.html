@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Show Work</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
+<style>
+  body { font-family: sans-serif; padding: 10px; }
+  ul { padding-left: 20px; }
+</style>
+</head>
+<body>
+<h3>Show Work</h3>
+<ul id="steps"></ul>
+<script>
+const vscode = acquireVsCodeApi();
+window.addEventListener('message', event => {
+  const steps = event.data.steps || [];
+  const ul = document.getElementById('steps');
+  ul.innerHTML = '';
+  steps.forEach(step => {
+    const li = document.createElement('li');
+    li.textContent = step;
+    ul.appendChild(li);
+    try { katex.render(step, li); } catch(e) {}
+  });
+});
+</script>
+</body>
+</html>
