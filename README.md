@@ -1,4 +1,5 @@
-# ![NumberScript Logo](resources/icon.svg) NumberScript — VS Code Web Extension
+# ![NumberScript Logo](resources/icon.svg) 
+# NumberScript — VS Code Web Extension
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](#)
