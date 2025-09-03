@@ -22,7 +22,7 @@ NumberScript is a symbolic mathematics language for VS Code Web. It allows you t
 ## 🖥 Installation
 
 ```bash
-git clone https://github.com/yourusername/numberscript.git
+git clone https://github.com/numberscript/numberscript.git
 cd numberscript
 npm install
 npm run build
