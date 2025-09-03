@@ -3,7 +3,7 @@ name: Publish NumberScript Extension
 on:
   push:
     tags:
-      - 'v*.*.*'   # Triggers workflow on version tags like v1.0.0, v1.1.0, etc.
+      - 'v*.*.*'   # Runs on version tags like v1.0.0
 
 jobs:
   publish:
@@ -24,9 +24,14 @@ jobs:
       - name: Build extension
         run: npm run build
 
-      - name: Install vsce
-        run: npm install -g vsce
+      - name: Install publishing tools
+        run: |
+          npm install -g vsce ovsx
 
       - name: Publish to VS Code Marketplace
         run: vsce publish -p ${{ secrets.VSCE_PAT }}
+
+      - name: Publish to Open VSX
+        run: ovsx publish -p ${{ secrets.OVSX_PAT }}
+
 
