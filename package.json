@@ -3,7 +3,7 @@
   "displayName": "NumberScript",
   "version": "1.0.0",
   "description": "NumberScript — symbolic math language extension for VS Code Web",
-  "publisher": "you",
+  "publisher": "NumberScript",
   "engines": { "vscode": "^1.87.0" },
   "activationEvents": [
     "onLanguage:numberscript",
