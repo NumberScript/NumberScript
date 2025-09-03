@@ -1,0 +1,5 @@
+# Example NumberScript program
+simplify(2*x + 3*x - (x/2));
+expand((x+2)^2);
+solve(x^2 - 5*x + 6 = 0, x);
+plot(sin(x) * exp(-0.1*x), x, -10..10);
