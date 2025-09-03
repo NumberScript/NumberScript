@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NumberScript Graph</title>
+<script src="https://cdn.plot.ly/plotly-2.16.1.min.js"></script>
+<style>
+  body { margin: 0; padding: 0; }
+  #plot { width: 100vw; height: 100vh; }
+</style>
+</head>
+<body>
+<div id="plot"></div>
+<script>
+const vscode = acquireVsCodeApi();
+window.addEventListener('message', event => {
+  const data = event.data.graph;
+  if (data) Plotly.newPlot('plot', data.traces, data.layout);
+});
+</script>
+</body>
+</html>
