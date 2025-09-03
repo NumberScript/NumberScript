@@ -1,8 +1,9 @@
-name: Release and Publish NumberScript
+name: Publish NumberScript Extension
 
 on:
-  release:
-    types: [published]   # Runs when a GitHub Release is published
+  push:
+    tags:
+      - 'v*.*.*'   # Runs when a version tag like v1.0.0 is pushed
 
 jobs:
   publish:
