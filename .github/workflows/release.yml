@@ -1,0 +1,113 @@
+name: Web-Optimized VS Code Extension Publish with Structured Changelog
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.3)'
+        required: true
+      publish_npm:
+        description: 'Publish to npm? (ignored if web-only)'
+        required: false
+        default: 'false'
+      web_only:
+        description: 'Is this extension web-only?'
+        required: false
+        default: 'true'
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Determine release version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION=${{ github.event.inputs.version }}
+          else
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          echo "version=$VERSION" >> $GITHUB_ENV
+          echo "Using version $VERSION"
+
+      - name: Update package.json & commit/tag (manual dispatch only)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          npm version ${{ env.version }} --no-git-tag-version
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "Bump version to ${{ env.version }}"
+          git tag v${{ env.version }}
+          git push --follow-tags
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build VS Code extension
+        run: npx vsce package
+
+      - name: Publish to VS Code Marketplace
+        run: npx vsce publish -p ${{ secrets.VSCE_TOKEN }} --baseContentUrl "" --baseImagesUrl ""
+
+      - name: Publish to Open VSX Registry
+        run: npx ovsx publish --pat ${{ secrets.OVSX_TOKEN }}
+
+      - name: Publish to npm (skip if web-only)
+        if: ${{ github.event.inputs.publish_npm == 'true' && github.event.inputs.web_only != 'true' }}
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Generate structured changelog
+        id: changelog
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
+          else
+            COMMITS=$(git log --pretty=format:"%s")
+          fi
+
+          FEATURES=$(echo "$COMMITS" | grep '^feat:' | sed 's/^feat: /- /')
+          FIXES=$(echo "$COMMITS" | grep '^fix:' | sed 's/^fix: /- /')
+          CHORES=$(echo "$COMMITS" | grep '^chore:' | sed 's/^chore: /- /')
+          OTHERS=$(echo "$COMMITS" | grep -vE '^(feat:|fix:|chore:)' | sed 's/^/- /')
+
+          echo "## Features" > changelog.txt
+          echo "$FEATURES" >> changelog.txt
+          echo "" >> changelog.txt
+
+          echo "## Bug Fixes" >> changelog.txt
+          echo "$FIXES" >> changelog.txt
+          echo "" >> changelog.txt
+
+          echo "## Chores / Other Changes" >> changelog.txt
+          echo "$CHORES" >> changelog.txt
+          echo "$OTHERS" >> changelog.txt
+
+          echo "changelog<<EOF" >> $GITHUB_ENV
+          cat changelog.txt >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: v${{ env.version }}
+          name: Release ${{ env.version }}
+          body: ${{ env.changelog }}
+          draft: false
+          prerelease: false
