@@ -1,9 +1,8 @@
-name: Publish NumberScript Extension
+name: Release and Publish NumberScript
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'   # Runs on version tags like v1.0.0
+  release:
+    types: [published]   # Runs when a GitHub Release is published
 
 jobs:
   publish:
@@ -33,5 +32,3 @@ jobs:
 
       - name: Publish to Open VSX
         run: ovsx publish -p ${{ secrets.OVSX_PAT }}
-
-
