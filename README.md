@@ -28,4 +28,5 @@ npm install
 npm run build
 npm run package
 
-No I didn't use AI. I naturally type like this.
+
+No AI apart from the logos, I naturally type like this.
