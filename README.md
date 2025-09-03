@@ -1,16 +1,29 @@
-## Hi there 👋
+# ![NumberScript Logo](resources/icon.svg) NumberScript — VS Code Web Extension
 
-<!--
-**NumberScript/NumberScript** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](#)
+[![VS Code](https://img.shields.io/badge/vscode-web-blue.svg)](https://vscode.dev)
 
-Here are some ideas to get you started:
+NumberScript is a symbolic mathematics language for VS Code Web. It allows you to write mathematical expressions, perform advanced operations, and visualize results with **step-by-step explanations** and **interactive graphs**.
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+---
+
+## 🌟 Features
+
+- **Mathematical Operations**: `simplify`, `expand`, `solve`, `combineLikeTerms`, `evaluate`
+- **Show Work Panel**: Step-by-step computation display
+- **Graph Panel**: Interactive plotting of functions and data
+- **PEMDOS/GEMDOS Compatibility**: Correct operator precedence
+- **Syntax Highlighting**: Keywords, functions, numbers, and comments
+- **Web-Friendly**: Fully compatible with VS Code Web
+
+---
+
+## 🖥 Installation
+
+```bash
+git clone https://github.com/yourusername/numberscript.git
+cd numberscript
+npm install
+npm run build
+npm run package
