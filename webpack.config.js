@@ -1,19 +1,23 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
-const webpack = require('webpack');
 
 module.exports = {
-  target: 'web', // VS Code web extensions
+  target: 'web', // modern browsers + VS Code Web
+  mode: 'production',
+
+  // Entry points: main extension file only
   entry: {
-    'extension.client': './src/extension.client.ts' // main extension
+    'extension.client': './src/extension.client.ts'
   },
+
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
     libraryTarget: 'umd',
-    globalObject: 'self', // needed for Web Workers
+    globalObject: 'self',
     clean: true
   },
+
   resolve: {
     extensions: ['.ts', '.js', '.ne'],
     fallback: {
@@ -21,36 +25,20 @@ module.exports = {
       path: false
     }
   },
+
   externals: {
-    vscode: 'commonjs vscode' // do not bundle VS Code API
+    vscode: 'commonjs vscode' // VS Code API is provided at runtime
   },
+
   module: {
     rules: [
-      // TypeScript
       { test: /\.ts$/, use: 'ts-loader', exclude: /node_modules/ },
-
-      // Nearley grammars
       { test: /\.ne$/, use: 'nearley-loader' },
-
-      // Styles
       { test: /\.css$/, use: ['style-loader', 'css-loader'] },
-
-      // HTML
-      { test: /\.html$/, use: 'raw-loader' },
-
-      // Web Worker
-      {
-        test: /\.worker\.ts$/,
-        use: [
-          {
-            loader: 'worker-loader',
-            options: { esModule: true, filename: '[name].js' }
-          },
-          'ts-loader'
-        ]
-      }
+      { test: /\.html$/, use: 'raw-loader' }
     ]
   },
+
   plugins: [
     new CopyPlugin({
       patterns: [
@@ -59,6 +47,10 @@ module.exports = {
       ]
     })
   ],
-  optimization: { splitChunks: false },
+
+  optimization: {
+    splitChunks: false
+  },
+
   devtool: 'source-map'
 };
