@@ -1,14 +1,8 @@
-name: Release Extension
+name: Release VS Code Extension
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Version (e.g. 1.2.3 or 1.2.3-beta.1)"
-        required: true
-  push:
-    tags:
-      - "v*"
+  release:
+    types: [published]
 
 jobs:
   release:
@@ -17,51 +11,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20.19.5
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Determine release version
-        id: version
+      - name: Bump version from GitHub release
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            VERSION=${{ github.event.inputs.version }}
-          else
-            VERSION=${GITHUB_REF#refs/tags/v}
-          fi
-          echo "version=$VERSION" >> $GITHUB_ENV
-          echo "Using version $VERSION"
-
-      - name: Validate version format
-        run: |
-          if [[ ! "${{ env.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z\.-]+)?$ ]]; then
-            echo "❌ Invalid version format: ${{ env.version }}"
-            echo "   Expected MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-prerelease"
-            exit 1
-          fi
-
-      - name: Update package.json & commit/tag (manual dispatch only)
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        run: |
-          CURRENT_VERSION=$(jq -r .version package.json)
-          if [ "$CURRENT_VERSION" != "${{ env.version }}" ]; then
-            npm version ${{ env.version }} --no-git-tag-version
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add package.json
-            git commit -m "Bump version to ${{ env.version }}"
-            git tag v${{ env.version }}
-            git push --follow-tags
-          else
-            echo "Version $CURRENT_VERSION already set in package.json, skipping npm version"
-          fi
+          echo "RELEASE_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+          echo "Bumping package.json version to $RELEASE_TAG"
+          npm version $RELEASE_TAG --no-git-tag-version
 
       - name: Build extension
         run: npm run build
@@ -70,12 +33,11 @@ jobs:
         run: npx @vscode/vsce package
 
       - name: Publish to VS Code Marketplace
-        run: npx @vscode/vsce publish -p ${{ secrets.VSCE_TOKEN }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx @vscode/vsce publish -p $VSCE_PAT
 
       - name: Publish to Open VSX
-        run: npx ovsx publish -p ${{ secrets.OVSX_TOKEN }}
-
-      - name: Publish to npm
-        run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          OPENVSX_TOKEN: ${{ secrets.OPENVSX_TOKEN }}
+        run: npx ovsx publish --pat $OPENVSX_TOKEN
