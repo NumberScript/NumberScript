@@ -1,18 +1,53 @@
-declare const __webpack_public_path__: string; // fix Webpack warning
-
+// server.worker.ts
 import * as mathjs from 'mathjs';
 import * as nerdamer from 'nerdamer';
-import mathsteps from 'mathsteps';
+import * as mathsteps from 'mathsteps';
 
-self.addEventListener('message', async (event) => {
-  const { id, code } = event.data;
-  let result: any = {};
+interface WorkerMessage {
+  id: string;
+  code: string;
+}
+
+interface WorkerResponse {
+  id: string;
+  result?: any;
+  steps?: string[];
+  graph?: any;
+  error?: string;
+}
+
+self.addEventListener('message', async (event: MessageEvent) => {
+  const msg: WorkerMessage = event.data;
+
+  const response: WorkerResponse = { id: msg.id };
+
   try {
-    // Example: run code using mathjs / nerdamer / mathsteps
-    const simplified = mathsteps.simplifyExpression(code);
-    result = { result: simplified.steps.map((s: any) => s.change).join('\n'), steps: simplified.steps };
+    const code = msg.code;
+
+    // Example: basic math evaluation using mathjs
+    const result = mathjs.evaluate(code);
+    response.result = result;
+
+    // Optionally, generate steps using mathsteps (if an expression)
+    try {
+      const steps = mathsteps.stepThroughExpression(code).map(s => s.changeType);
+      response.steps = steps;
+    } catch {}
+
+    // Optionally, generate symbolic solves via nerdamer
+    try {
+      const solve = nerdamer.solveEquations(code);
+      if (solve) response.result = solve;
+    } catch {}
+
+    // Graph data placeholder (optional)
+    response.graph = null;
+
   } catch (err: any) {
-    result = { error: err.message };
+    response.error = err.message;
   }
-  (self as any).postMessage({ id, ...result });
+
+  // Post result back to main thread
+  self.postMessage(response);
 });
+
