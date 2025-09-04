@@ -1,8 +1,12 @@
-name: Release VS Code Extension
+name: Manual Release VS Code Extension
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.2.3)'
+        required: true
+        default: 'patch'
 
 jobs:
   release:
@@ -20,11 +24,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Bump version from GitHub release
+      - name: Bump version
+        id: version
         run: |
-          echo "RELEASE_TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
-          echo "Bumping package.json version to $RELEASE_TAG"
-          npm version $RELEASE_TAG --no-git-tag-version
+          VERSION_INPUT="${{ github.event.inputs.version }}"
+          echo "Bumping version to $VERSION_INPUT"
+          npm version $VERSION_INPUT --no-git-tag-version
+          echo "NEW_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+
+      - name: Generate patch notes
+        id: notes
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 || echo "")
+          if [ -z "$LAST_TAG" ]; then
+            git log --pretty=format:'- %s' > CHANGELOG.md
+          else
+            git log $LAST_TAG..HEAD --pretty=format:'- %s' > CHANGELOG.md
+          fi
+          PATCH_NOTES=$(cat CHANGELOG.md)
+          echo "PATCH_NOTES<<EOF" >> $GITHUB_ENV
+          echo "$PATCH_NOTES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Build extension
         run: npm run build
@@ -35,9 +55,9 @@ jobs:
       - name: Publish to VS Code Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: npx @vscode/vsce publish -p $VSCE_PAT
+        run: npx @vscode/vsce publish -p $VSCE_PAT --packagePath *.vsix --notes "$PATCH_NOTES"
 
       - name: Publish to Open VSX
         env:
           OPENVSX_TOKEN: ${{ secrets.OPENVSX_TOKEN }}
-        run: npx ovsx publish --pat $OPENVSX_TOKEN
+        run: npx ovsx publish --pat $OPENVSX_TOKEN --packagePath *.vsix --releaseNotes "$PATCH_NOTES"
