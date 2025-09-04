@@ -76,12 +76,12 @@
   },
   "main": "./dist/extension.client.js",
   "scripts": {
-    "clean": "rm -rf dist .webpack .cache || true",
-    "compile": "webpack --mode=production --config webpack.config.js",
+    "prebuild": "git add . && git commit -m 'Auto-commit uncommitted changes [skip ci]' || echo 'No changes to commit'",
+    "build": "webpack --mode=production --config webpack.config.js",
     "dev": "webpack --mode=development --watch --config webpack.config.js",
     "lint": "eslint src --ext .ts",
-    "package": "npx @vscode/vsce package",
-    "ci-bump-version": "npm version patch --no-git-tag-version && echo 'Version bumped to:' $(node -p \"require('./package.json').version\")"
+    "compile": "npm run build",
+    "package": "npm run prebuild && npm version patch -m 'CI: Bump version to %s [skip ci]' && npx @vscode/vsce package"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
