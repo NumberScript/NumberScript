@@ -1,15 +1,13 @@
-name: Publish VS Code Extension
+name: Publish Extension
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -17,25 +15,30 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: 20
+          cache: 'npm'
+
+      - name: Commit uncommitted changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff-index --quiet HEAD || git commit -m "chore: commit uncommitted changes [skip ci]"
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build extension
-        run: npm run build
-
-      - name: Commit any uncommitted changes
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add -A
-          git diff --cached --quiet || git commit -m "chore: auto-commit changes before version bump [skip ci]"
-
       - name: Bump version
         run: npm version patch -m "CI: Bump version to %s [skip ci]"
 
-      - name: Publish VSCE package
-        run: npx @vscode/vsce publish
-        env:
-          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+      - name: Compile/Build Extension
+        run: npm run build
+
+      - name: Package VS Code Extension
+        run: npx @vscode/vsce package
+
+      # Optional: Publish to VS Code Marketplace
+      # - name: Publish Extension
+      #   run: npx @vscode/vsce publish
+      #   env:
+      #     VSCE_PAT: ${{ secrets.VSCE_PAT }}
