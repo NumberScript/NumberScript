@@ -1,35 +1,37 @@
-name: Publish NumberScript Extension
+name: Publish VS Code Extension
 
 on:
   push:
+    branches:
+      - main  # or your default branch
     tags:
-      - 'v*.*.*'   # Runs when a version tag like v1.0.0 is pushed
+      - 'v*.*.*'  # optional: trigger on semantic version tags
 
 jobs:
   publish:
+    name: Package & Publish Extension
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: '20'  # use your desired Node.js version
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build extension
-        run: npm run build
+      - name: Install @vscode/vsce
+        run: npm install -g @vscode/vsce
 
-      - name: Install publishing tools
-        run: |
-          npm install -g vsce ovsx
+      - name: Package extension
+        run: npx @vscode/vsce package
 
-      - name: Publish to VS Code Marketplace
-        run: vsce publish -p ${{ secrets.VSCE_PAT }}
+      - name: Publish extension
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}  # store your Personal Access Token in GitHub Secrets
+        run: npx @vscode/vsce publish --pat $VSCE_PAT
 
-      - name: Publish to Open VSX
-        run: ovsx publish -p ${{ secrets.OVSX_PAT }}
