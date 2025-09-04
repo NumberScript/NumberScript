@@ -3,13 +3,10 @@ name: Publish VS Code Extension
 on:
   push:
     branches:
-      - main  # or your default branch
-    tags:
-      - 'v*.*.*'  # optional: trigger on semantic version tags
+      - main  # or the branch you want to trigger on
 
 jobs:
-  publish:
-    name: Package & Publish Extension
+  build-and-publish:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,19 +16,18 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'  # use your desired Node.js version
+          node-version: '20'
 
       - name: Install dependencies
         run: npm install
 
-      - name: Install @vscode/vsce
-        run: npm install -g @vscode/vsce
+      - name: Build extension
+        run: npm run compile
 
       - name: Package extension
         run: npx @vscode/vsce package
 
       - name: Publish extension
         env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}  # store your Personal Access Token in GitHub Secrets
-        run: npx @vscode/vsce publish --pat $VSCE_PAT
-
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx @vscode/vsce publish
