@@ -1,4 +1,4 @@
-name: Publish VS Code Web Extension
+name: Publish NumberScript Extension
 
 on:
   push:
@@ -9,22 +9,18 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-
     steps:
+      # Step 1: Checkout repo
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      # Step 2: Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: 20
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build extension
-        run: npm run build
-
+      # Step 3: Commit any uncommitted changes
       - name: Commit uncommitted changes
         run: |
           git config --global user.name "GitHub Action"
@@ -32,12 +28,22 @@ jobs:
           git add -A
           git diff-index --quiet HEAD || git commit -m "CI: Commit uncommitted changes [skip ci]"
 
+      # Step 4: Bump patch version
       - name: Bump patch version
-        run: npm version patch -m "CI: Bump version to %s [skip ci]"
+        run: |
+          npm version patch -m "CI: Bump version to %s [skip ci]"
 
-      - name: Package and publish
+      # Step 5: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 6: Compile/build extension
+      - name: Build extension
+        run: npm run build
+
+      # Step 7: Package and publish
+      - name: Publish to VS Code Marketplace
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
-          npx @vscode/vsce package
-          npx @vscode/vsce publish --pat $VSCE_PAT
+          npx @vscode/vsce publish
