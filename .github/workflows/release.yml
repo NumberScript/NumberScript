@@ -4,48 +4,34 @@ on:
   workflow_dispatch:   # Manual trigger
   push:
     tags:
-      - 'v*.*.*'       # Optional: trigger on version tags
+      - 'v*.*.*'       # Trigger on version tags (optional)
 
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Setup Node.js 20.19.5
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20.19.5
           cache: 'npm'
 
-      # 3. Install dependencies safely
       - name: Install dependencies
         run: |
-          npm install       # updates package-lock.json if out of sync
+          npm install       # updates package-lock.json if needed
           npm ci            # ensures clean install
 
-      # 4. Build the extension
       - name: Build extension
         run: npm run build
 
-      # 5. Package VS Code extension
       - name: Package extension
-        run: npx @vscode/vsce package
+        run: npx vsce package
 
-      # 6. Publish extension
       - name: Publish extension
-        uses: w9jds/publish-vscode-extension@v2
-        with:
-          vsce-token: ${{ secrets.VSCE_PAT }}
-          extension-id: <your-extension-id-here>  # optional if using vsce-token
-
-      # 7. Generate patch notes automatically (optional)
-      - name: Generate patch notes
-        uses: mikeal/publish-release-notes@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref_name }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: npx vsce publish
