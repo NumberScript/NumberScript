@@ -1,36 +1,32 @@
-name: Web + Desktop VS Code Extension Publish
+name: Release Extension
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 1.0.3 or 1.0.3-beta.1)'
+        description: "Version (e.g. 1.2.3 or 1.2.3-beta.1)"
         required: true
-      publish_npm:
-        description: 'Publish to npm? (ignored if web-only or prerelease)'
-        required: false
-        default: 'false'
-      web_only:
-        description: 'Is this extension web-only?'
-        required: false
-        default: 'true'
   push:
     tags:
-      - 'v*.*.*'
+      - "v*"
 
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
 
       - name: Determine release version
         id: version
@@ -43,12 +39,11 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_ENV
           echo "Using version $VERSION"
 
-      - name: Validate version format (semver + prerelease)
+      - name: Validate version format
         run: |
-          if [[ ! "${{ env.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+          if [[ ! "${{ env.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z\.-]+)?$ ]]; then
             echo "❌ Invalid version format: ${{ env.version }}"
-            echo "   Expected format: MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-prerelease"
-            echo "   Examples: 1.2.3, 2.0.0-beta.1, 3.1.4-rc.0"
+            echo "   Expected MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-prerelease"
             exit 1
           fi
 
@@ -66,72 +61,21 @@ jobs:
             git push --follow-tags
           else
             echo "Version $CURRENT_VERSION already set in package.json, skipping npm version"
-
-      - name: Install dependencies
-        run: |
-          npm ci || npm install
-
-      - name: Build VS Code extension
-        run: |
-          npm run build
-
-      - name: Package VS Code extension
-        run: |
-          npx @vscode/vsce package
-
-      - name: Publish to VS Code Marketplace
-        run: |
-          npx @vscode/vsce publish -p ${{ secrets.VSCE_TOKEN }} --baseContentUrl "" --baseImagesUrl ""
-
-      - name: Publish to Open VSX Registry
-        run: |
-          npx ovsx publish --pat ${{ secrets.OVSX_TOKEN }}
-
-      - name: Publish to npm (skip if prerelease or web-only)
-        if: ${{ github.event.inputs.publish_npm == 'true' && github.event.inputs.web_only != 'true' && !contains(env.version, '-') }}
-        run: |
-          npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Generate structured changelog
-        id: changelog
-        run: |
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -n "$LAST_TAG" ]; then
-            COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s")
-          else
-            COMMITS=$(git log --pretty=format:"%s")
           fi
 
-          FEATURES=$(echo "$COMMITS" | grep '^feat:' | sed 's/^feat: /- /')
-          FIXES=$(echo "$COMMITS" | grep '^fix:' | sed 's/^fix: /- /')
-          CHORES=$(echo "$COMMITS" | grep '^chore:' | sed 's/^chore: /- /')
-          OTHERS=$(echo "$COMMITS" | grep -vE '^(feat:|fix:|chore:)' | sed 's/^/- /')
+      - name: Build extension
+        run: npm run build
 
-          echo "## Features" > changelog.txt
-          echo "$FEATURES" >> changelog.txt
-          echo "" >> changelog.txt
+      - name: Package extension
+        run: npx @vscode/vsce package
 
-          echo "## Bug Fixes" >> changelog.txt
-          echo "$FIXES" >> changelog.txt
-          echo "" >> changelog.txt
+      - name: Publish to VS Code Marketplace
+        run: npx @vscode/vsce publish -p ${{ secrets.VSCE_TOKEN }}
 
-          echo "## Chores / Other Changes" >> changelog.txt
-          echo "$CHORES" >> changelog.txt
-          echo "$OTHERS" >> changelog.txt
+      - name: Publish to Open VSX
+        run: npx ovsx publish -p ${{ secrets.OVSX_TOKEN }}
 
-          {
-            echo "changelog<<EOF"
-            cat changelog.txt
-            echo "EOF"
-          } >> $GITHUB_ENV
-
-      - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: v${{ env.version }}
-          name: Release ${{ env.version }}
-          body: ${{ env.changelog }}
-          draft: false
-          prerelease: ${{ contains(env.version, '-') }}
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
