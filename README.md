@@ -30,3 +30,4 @@ npm run package
 
 
 No AI apart from the logos, I naturally type like this.
+Made by Hudson at MVHS :)
