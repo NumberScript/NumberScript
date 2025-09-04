@@ -34,66 +34,28 @@
     "onLanguage:numberscript",
     "onCommand:numberscript.run"
   ],
-  "contributes": {
-    "languages": [
-      {
-        "id": "numberscript",
-        "aliases": [
-          "NumberScript",
-          "numberscript"
-        ],
-        "extensions": [
-          ".ns"
-        ],
-        "configuration": "./language-configuration.json"
-      }
-    ],
-    "grammars": [
-      {
-        "language": "numberscript",
-        "scopeName": "source.numberscript",
-        "path": "./numberscript.tmLanguage.json"
-      }
-    ],
-    "commands": [
-      {
-        "command": "numberscript.run",
-        "title": "Run NumberScript"
-      }
-    ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "numberscript",
-          "title": "NumberScript",
-          "icon": "resources/icon.png"
-        }
-      ]
-    },
-    "views": {
-      "numberscript": [
-        {
-          "id": "numberscriptShowWork",
-          "name": "Show Work"
-        }
-      ]
-    }
-  },
   "main": "./dist/extension.client.js",
   "scripts": {
     "clean": "rm -rf dist .webpack .cache || true",
     "build": "webpack --mode=production --config webpack.config.js",
     "dev": "webpack --mode=development --watch --config webpack.config.js",
     "lint": "eslint src --ext .ts",
-    "package": "vsce package"
+    "package": "npx @vscode/vsce package",
+    "publish": "npx @vscode/vsce publish -p $VSCE_TOKEN"
   },
   "devDependencies": {
-    "@types/node": "^20.19.5",
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.87.0",
+    "copy-webpack-plugin": "^11.0.0",
     "ts-loader": "^9.5.0",
     "typescript": "^5.0.0",
-    "webpack": "^5.0.0",
+    "webpack": "^5.101.3",
     "webpack-cli": "^5.0.0",
-    "copy-webpack-plugin": "^11.0.0"
+    "worker-loader": "^3.0.8",
+    "nearley-loader": "^3.0.0",
+    "style-loader": "^3.3.2",
+    "css-loader": "^6.8.1",
+    "raw-loader": "^4.0.2"
   },
   "dependencies": {
     "mathjs": "^11.8.0",
