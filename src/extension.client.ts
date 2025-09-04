@@ -1,15 +1,23 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
+// src/extension.client.ts
+// VS Code Web-compatible extension client
 
-export function activate(context: vscode.ExtensionContext) {
+import * as vscode from 'vscode';
+import './server.worker'; // Webpack will handle worker bundling
+import * as activation from './extension.activation';
+
+export const activate = activation.activate;
+export const deactivate = activation.deactivate;
+
+// Optional: if you want to keep the original logic inline, wrap in exported function
+export function setupClient(context: vscode.ExtensionContext) {
   const output = vscode.window.createOutputChannel('NumberScript');
+
   const showWorkProvider = new ShowWorkViewProvider(context.extensionUri);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider('showWorkView', showWorkProvider)
   );
 
-  const worker = new Worker(new URL('./server.worker.js', import.meta.url), { type: 'module' });
+  const worker = new Worker(new URL('./server.worker', import.meta.url), { type: 'module' });
 
   function sendToWorker(code: string): Promise<any> {
     return new Promise((resolve) => {
@@ -59,13 +67,15 @@ class ShowWorkViewProvider implements vscode.WebviewViewProvider {
   resolveWebviewView(view: vscode.WebviewView) {
     this._view = view;
     view.webview.options = { enableScripts: true };
-    const htmlPath = vscode.Uri.joinPath(this._extensionUri, 'webviews', 'showWork.html');
-    view.webview.html = fs.readFileSync(htmlPath.fsPath, 'utf8');
+    // Use Uri.joinPath instead of fs.readFileSync for web
+    const htmlUri = vscode.Uri.joinPath(this._extensionUri, 'webviews', 'showWork.html');
+    view.webview.html = `<!DOCTYPE html><html><body><iframe src="${htmlUri.toString()}" style="width:100%;height:100%;border:none;"></iframe></body></html>`;
   }
 }
 
 class GraphPanel {
   static current?: GraphPanel;
+
   static createOrShow(extensionUri: vscode.Uri, graphData: any) {
     const column = vscode.ViewColumn.Beside;
     if (GraphPanel.current) {
@@ -73,15 +83,22 @@ class GraphPanel {
       GraphPanel.current.update(graphData);
       return;
     }
-    const panel = vscode.window.createWebviewPanel('numberscriptGraph', 'NumberScript Graph', column, { enableScripts: true });
+    const panel = vscode.window.createWebviewPanel(
+      'numberscriptGraph',
+      'NumberScript Graph',
+      column,
+      { enableScripts: true }
+    );
     GraphPanel.current = new GraphPanel(panel, extensionUri, graphData);
   }
+
   constructor(private panel: vscode.WebviewPanel, extensionUri: vscode.Uri, private data: any) {
-    const htmlPath = vscode.Uri.joinPath(extensionUri, 'webviews', 'graph.html');
-    this.panel.webview.html = fs.readFileSync(htmlPath.fsPath, 'utf8');
+    const htmlUri = vscode.Uri.joinPath(extensionUri, 'webviews', 'graph.html');
+    this.panel.webview.html = `<!DOCTYPE html><html><body><iframe src="${htmlUri.toString()}" style="width:100%;height:100%;border:none;"></iframe></body></html>`;
     this.panel.onDidDispose(() => { GraphPanel.current = undefined; });
     this.update(data);
   }
+
   update(data: any) {
     this.panel.webview.postMessage({ graph: data });
   }
