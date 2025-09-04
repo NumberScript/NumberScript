@@ -38,8 +38,13 @@
     "languages": [
       {
         "id": "numberscript",
-        "aliases": ["NumberScript", "numberscript"],
-        "extensions": [".ns"],
+        "aliases": [
+          "NumberScript",
+          "numberscript"
+        ],
+        "extensions": [
+          ".ns"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -76,12 +81,13 @@
   },
   "main": "./dist/extension.client.js",
   "scripts": {
-    "prebuild": "git add . && git commit -m 'Auto-commit uncommitted changes [skip ci]' || echo 'No changes to commit'",
+    "clean": "rm -rf dist .webpack .cache || true",
     "build": "webpack --mode=production --config webpack.config.js",
     "dev": "webpack --mode=development --watch --config webpack.config.js",
     "lint": "eslint src --ext .ts",
     "compile": "npm run build",
-    "package": "npm run prebuild && npm version patch -m 'CI: Bump version to %s [skip ci]' && npx @vscode/vsce package"
+    "prepackage": "git config --global user.name 'CI Bot' && git config --global user.email 'ci-bot@example.com' && git add -A && git diff-index --quiet HEAD || git commit -m 'Auto-commit uncommitted changes [skip ci]'",
+    "package": "npm run prepackage && npm version patch -m 'CI: Bump version to %s [skip ci]' && npx @vscode/vsce package"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
