@@ -80,7 +80,8 @@
     "compile": "webpack --mode=production --config webpack.config.js",
     "dev": "webpack --mode=development --watch --config webpack.config.js",
     "lint": "eslint src --ext .ts",
-    "package": "npx @vscode/vsce package"
+    "package": "npx @vscode/vsce package",
+    "ci-bump-version": "npm version patch --no-git-tag-version && echo 'Version bumped to:' $(node -p \"require('./package.json').version\")"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
