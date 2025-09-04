@@ -4,6 +4,9 @@
 import * as vscode from 'vscode';
 import './server.worker'; // Webpack will handle worker bundling
 import * as activation from './extension.activation';
+// Import the worker for Web/Desktop
+import './server/server.worker';
+
 
 export const activate = activation.activate;
 export const deactivate = activation.deactivate;
