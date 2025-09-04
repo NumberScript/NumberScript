@@ -2,10 +2,10 @@ const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  target: 'web', // modern browsers + VS Code Web
+  target: 'web', // VS Code Web
   mode: 'production',
 
-  // Entry points: main extension file only
+  // Entry point: main extension file
   entry: {
     'extension.client': './src/extension.client.ts'
   },
@@ -14,7 +14,7 @@ module.exports = {
     filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
     libraryTarget: 'umd',
-    globalObject: 'self',
+    globalObject: 'self', // required for web workers and VS Code Web
     clean: true
   },
 
@@ -27,7 +27,7 @@ module.exports = {
   },
 
   externals: {
-    vscode: 'commonjs vscode' // VS Code API is provided at runtime
+    vscode: 'commonjs vscode' // VS Code API provided at runtime
   },
 
   module: {
