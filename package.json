@@ -42,9 +42,7 @@
           "NumberScript",
           "numberscript"
         ],
-        "extensions": [
-          ".ns"
-        ],
+        "extensions": [".ns"],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -85,9 +83,9 @@
     "build": "webpack --mode=production --config webpack.config.js",
     "dev": "webpack --mode=development --watch --config webpack.config.js",
     "lint": "eslint src --ext .ts",
-    "compile": "npm run build",
     "prepackage": "git config --global user.name 'CI Bot' && git config --global user.email 'ci-bot@example.com' && git add -A && git diff-index --quiet HEAD || git commit -m 'Auto-commit uncommitted changes [skip ci]'",
-    "package": "npm run prepackage && npm version patch -m 'CI: Bump version to %s [skip ci]' && npx @vscode/vsce package"
+    "versionpatch": "npm version patch -m 'CI: Bump version to %s [skip ci]'",
+    "package": "npm run prepackage && npm run versionpatch && npm run build && npx @vscode/vsce package"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
