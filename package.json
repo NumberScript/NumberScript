@@ -38,13 +38,8 @@
     "languages": [
       {
         "id": "numberscript",
-        "aliases": [
-          "NumberScript",
-          "numberscript"
-        ],
-        "extensions": [
-          ".ns"
-        ],
+        "aliases": ["NumberScript", "numberscript"],
+        "extensions": [".ns"],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -82,17 +77,17 @@
   "main": "./dist/extension.client.js",
   "scripts": {
     "clean": "rm -rf dist .webpack .cache || true",
-    "compile": "tsc -p ./",
     "build": "webpack --mode=production --config webpack.config.js",
     "dev": "webpack --mode=development --watch --config webpack.config.js",
     "lint": "eslint src --ext .ts",
-    "package": "npx @vscode/vsce package"
+    "package": "npx @vscode/vsce package",
+    "version-patch": "node scripts/version-patch.js"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.87.0",
     "ts-loader": "^9.5.0",
-    "typescript": "^5.2.2",
+    "typescript": "^5.0.0",
     "webpack": "^5.101.3",
     "webpack-cli": "^5.0.0",
     "copy-webpack-plugin": "^11.0.0",
