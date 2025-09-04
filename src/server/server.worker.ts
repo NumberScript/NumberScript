@@ -1,56 +1,18 @@
-import * as math from 'mathjs';
-import nerdamer from 'nerdamer';
-import * as mathsteps from 'mathsteps';
+declare const __webpack_public_path__: string; // fix Webpack warning
 
-interface WorkerRequest { id: string, code: string }
-interface WorkerResponse { id: string, result?: any, steps?: string[], graph?: any, error?: string }
+import * as mathjs from 'mathjs';
+import * as nerdamer from 'nerdamer';
+import mathsteps from 'mathsteps';
 
-self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
+self.addEventListener('message', async (event) => {
   const { id, code } = event.data;
+  let result: any = {};
   try {
-    const statements = code.split(/;|\n/).map(s => s.trim()).filter(Boolean);
-    let result: any = null;
-    let steps: string[] = [];
-    let graph: any = null;
-
-    for (const stmt of statements) {
-      if (/^simplify/i.test(stmt)) {
-        const inside = stmt.match(/\((.*)\)/)?.[1];
-        if (inside) {
-          const simp = nerdamer(inside).simplify().toString();
-          result = simp;
-          const stepObjs = mathsteps.simplifyExpression(inside);
-          steps.push(...stepObjs.map(s => s.toString()));
-        }
-      } else if (/^expand/i.test(stmt)) {
-        const inside = stmt.match(/\((.*)\)/)?.[1];
-        if (inside) result = nerdamer.expand(inside).toString();
-      } else if (/^solve/i.test(stmt)) {
-        const match = stmt.match(/solve\((.*),(.*)\)/i);
-        if (match) {
-          const expr = match[1], variable = match[2].trim();
-          const sol = nerdamer.solveEquations([expr], variable);
-          result = sol.toString();
-        }
-      } else if (/^plot/i.test(stmt)) {
-        const match = stmt.match(/plot\((.*),(.*),(.*)\.\.(.*)\)/i);
-        if (match) {
-          const expr = match[1], variable = match[2].trim();
-          const start = parseFloat(match[3]), end = parseFloat(match[4]);
-          const step = (end - start) / 100;
-          const xValues: number[] = [], yValues: number[] = [];
-          for (let x = start; x <= end; x += step) {
-            try { const scope: any = {}; scope[variable] = x; yValues.push(math.evaluate(expr, scope)); xValues.push(x); } catch{}
-          }
-          graph = { traces:[{x:xValues,y:yValues,mode:'lines',name:expr}], layout:{title:`Plot of ${expr}`}};
-          result = 'Graph generated';
-        }
-      } else result = math.evaluate(stmt);
-    }
-
-    (self as any).postMessage({ id, result, steps, graph });
-
+    // Example: run code using mathjs / nerdamer / mathsteps
+    const simplified = mathsteps.simplifyExpression(code);
+    result = { result: simplified.steps.map((s: any) => s.change).join('\n'), steps: simplified.steps };
   } catch (err: any) {
-    (self as any).postMessage({ id, error: err.message });
+    result = { error: err.message };
   }
-};
+  (self as any).postMessage({ id, ...result });
+});
