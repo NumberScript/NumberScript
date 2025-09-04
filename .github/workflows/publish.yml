@@ -1,42 +1,49 @@
-name: Auto Publish VS Code Extension
+name: Build & Publish NumberScript
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Setup Node.js
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: '20'
 
-      # 3. Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      # 4. Compile TypeScript
-      - name: Compile extension
-        run: npm run compile
-
-      # 5. Bump version automatically
-      - name: Bump version
+      - name: Commit uncommitted changes if any
         run: |
-          npm version patch -m "CI: Bump version to %s [skip ci]"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          if ! git diff --quiet || ! git diff --cached --quiet; then
+            git add -A
+            git commit -m "CI: Auto-commit uncommitted changes [skip ci]"
+          else
+            echo "No changes to commit."
+          fi
 
-      # 6. Package VS Code extension
-      - name: Package extension
+      - name: Bump patch version
+        run: npm version patch -m "CI: Bump version to %s [skip ci]"
+
+      - name: Compile extension
+        run: npm run build
+
+      - name: Package VSIX
         run: npx @vscode/vsce package
 
-      # 7. Publish extension
-      - name: Publish extension
-        run: npx @vscode/vsce publish --pat ${{ secrets.VSCE_PAT }}
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: numberscript-extension
+          path: '*.vsix'
