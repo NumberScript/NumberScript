@@ -1,33 +1,42 @@
-name: Publish VS Code Extension
+name: Auto Publish VS Code Extension
 
 on:
   push:
     branches:
-      - main  # or the branch you want to trigger on
+      - main
 
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # 1. Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
+      # 2. Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: 20
 
+      # 3. Install dependencies
       - name: Install dependencies
         run: npm install
 
-      - name: Build extension
+      # 4. Compile TypeScript
+      - name: Compile extension
         run: npm run compile
 
+      # 5. Bump version automatically
+      - name: Bump version
+        run: |
+          npm version patch -m "CI: Bump version to %s [skip ci]"
+
+      # 6. Package VS Code extension
       - name: Package extension
         run: npx @vscode/vsce package
 
+      # 7. Publish extension
       - name: Publish extension
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: npx @vscode/vsce publish
+        run: npx @vscode/vsce publish --pat ${{ secrets.VSCE_PAT }}
