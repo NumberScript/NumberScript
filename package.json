@@ -38,10 +38,7 @@
     "languages": [
       {
         "id": "numberscript",
-        "aliases": [
-          "NumberScript",
-          "numberscript"
-        ],
+        "aliases": ["NumberScript", "numberscript"],
         "extensions": [".ns"],
         "configuration": "./language-configuration.json"
       }
@@ -79,13 +76,14 @@
   },
   "main": "./dist/extension.client.js",
   "scripts": {
-    "clean": "rm -rf dist .webpack .cache || true",
+    "clean": "rimraf dist .webpack .cache",
     "build": "webpack --mode=production --config webpack.config.js",
     "dev": "webpack --mode=development --watch --config webpack.config.js",
     "lint": "eslint src --ext .ts",
+    "compile": "npm run build",
     "prepackage": "git config --global user.name 'CI Bot' && git config --global user.email 'ci-bot@example.com' && git add -A && git diff-index --quiet HEAD || git commit -m 'Auto-commit uncommitted changes [skip ci]'",
     "versionpatch": "npm version patch -m 'CI: Bump version to %s [skip ci]'",
-    "package": "npm run prepackage && npm run versionpatch && npm run build && npx @vscode/vsce package"
+    "package": "npm run prepackage && npm run versionpatch && npm run compile && npx @vscode/vsce package"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -99,7 +97,8 @@
     "nearley-loader": "^2.0.0",
     "style-loader": "^3.3.2",
     "css-loader": "^6.8.1",
-    "raw-loader": "^4.0.2"
+    "raw-loader": "^4.0.2",
+    "rimraf": "^5.0.0"
   },
   "dependencies": {
     "mathjs": "^11.8.0",
