@@ -1,18 +1,21 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import ShowWorkViewProvider from './showWorkViewProvider';
+import GraphPanel from './graphPanel';
 
-// Use the path injected by Webpack
-const workerPath = SERVER_WORKER_PATH as string;
+// Import the Web Worker using worker-loader
+import Worker from './server.worker.ts';
 
 export function activate(context: vscode.ExtensionContext) {
   const output = vscode.window.createOutputChannel('NumberScript');
-  const showWorkProvider = new ShowWorkViewProvider(context.extensionUri);
 
+  const showWorkProvider = new ShowWorkViewProvider(context.extensionUri);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider('showWorkView', showWorkProvider)
   );
 
-  const worker = new Worker(new URL(workerPath, import.meta.url), { type: 'module' });
+  // Instantiate the worker
+  const worker = new Worker();
 
   function sendToWorker(code: string): Promise<any> {
     return new Promise((resolve) => {
@@ -32,36 +35,21 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('numberscript.run', async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) return;
+
       const code = editor.document.getText();
       output.appendLine(`Running NumberScript:\n${code}`);
+
       try {
         const result: any = await sendToWorker(code);
         if (result.error) output.appendLine(`Error: ${result.error}`);
         else {
           output.appendLine(`Result: ${result.result}`);
           if (result.steps) showWorkProvider.setSteps(result.steps);
+          if (result.graph) GraphPanel.createOrShow(context.extensionUri, result.graph);
         }
       } catch (err: any) {
         output.appendLine(`Runtime error: ${err.message}`);
       }
     })
   );
-}
-
-class ShowWorkViewProvider implements vscode.WebviewViewProvider {
-  private _view?: vscode.WebviewView;
-  private steps: string[] = [];
-  constructor(private readonly _extensionUri: vscode.Uri) {}
-
-  setSteps(steps: string[]) {
-    this.steps = steps;
-    if (this._view) this._view.webview.postMessage({ steps });
-  }
-
-  resolveWebviewView(view: vscode.WebviewView) {
-    this._view = view;
-    view.webview.options = { enableScripts: true };
-    const htmlPath = vscode.Uri.joinPath(this._extensionUri, 'webviews', 'showWork.html');
-    view.webview.html = fs.readFileSync(htmlPath.fsPath, 'utf8');
-  }
 }
